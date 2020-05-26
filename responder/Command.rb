@@ -2,6 +2,7 @@
 
 require './bot_options.rb'
 require './responder/ExpectedInput.rb'
+require './parser/UsersParser.rb'
 class Invoker
   def execute(cmd)
     @history ||= []
@@ -27,9 +28,19 @@ class StartCommand < Command
   end
 end
 
+class LinkCommand < Command
+  def execute
+    request.link
+  end
+end
+
 class Receiver
   def start
     BotOptions.instance.send_message(text: 'start_message')
+  end
+
+  def link
+    GetUsersList.new(BotOptions.instance.message.text)
   end
 end
 
@@ -42,6 +53,7 @@ class AnswerClient
   def respond_to(cmd)
     case cmd
     when Input::START then @invoker.execute(StartCommand.new(@receiver))
+    when /#{Input::LINK}/ then @invoker.execute(LinkCommand.new(@receiver))
     end
   end
 end
