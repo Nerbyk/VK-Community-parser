@@ -9,7 +9,7 @@ This application, based on telegram-bot-api provides a functionality of searchin
 - Various criteria of searching(can be combined)
 - Convinient user interface via Telegram app
 - Automatic logging  of received and sent message
-- Storing data in YAML 
+- Storing data in SQL via ORM Sequel
 - Separate classes for all the functional, implemented features:
     - SOLID
     - KISS
