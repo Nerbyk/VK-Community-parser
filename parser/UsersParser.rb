@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require 'requests/sugar'
+# require 'requests/sugar'
+require './db/db.rb'
 require 'dotenv'
 require 'vkontakte_api'
 Dotenv.load('./.env')
@@ -24,31 +25,19 @@ end
 class GetUsersList < ApiInfo
   attr_reader :token, :version, :group_id
   def execute
+    users = []
+    limit = 1000
+    page = 0
+    @vk = VkontakteApi::Client.new(token)
     @group_id = group_id.split('/').last
-    # response = Requests.get('https://api.vk.com/method/groups.getMembers', params: { 'access_token': token,
-    #                                                                                  'v': version,
-    #                                                                                  'group_id': group_id }).json['response']
-    # p response
-    # count = response['count']
-    # members = response['items']
-    # offset = 1000
-    # while offset < count
-    #   response = Requests.get('https://api.vk.com/method/groups.getMembers', params: { 'access_token': token,
-    #                                                                                    'v': version,
-    #                                                                                    'group_id': group_id,
-    #                                                                                    'count': offset.to_i,
-    #                                                                                    'offset': offset.to_i }).json['response']
-    #   p response
-    #   offset = response['offset']
-    #   members += response['items']
-    # end
-    # p members
-    # # r = Requests.get('https://api.vk.com/method/users.get', params: {'access_token': token, 'v': v, 'user_ids': @link, 'fields': 'id' })
-    # # vk_id = r.json['response']
-    # # @link = vk_id[0]['id']
-    @vk = VkontakteApi.authorize(code: token)
-    p @vk.friends.get
+    loop do
+      offset = page * limit
+      members = @vk.groups.getMembers("group_id": group_id, "v": version, "fields": 'sex, bdate, city, country', "offset": offset)
+      members.items.each { |user| users << user }
+      page += 1
+      break if members['count'].to_i < offset + limit
+    end
+    db = Database.new(group_id: group_id)
+    db.write_down(users)
   end
 end
-
-GetUsersList.new('https://vk.com/pozor.brno')
